@@ -1,5 +1,7 @@
 ;; Simple Escrow Contract
+(define-constant contract-owner tx-sender)
 
+ 
 (define-map deposits { user: principal } { amount: uint })
 
 (define-public (deposit (amount uint))
@@ -8,13 +10,17 @@
 )
 
 (define-public (release (user principal))
-  (map-set deposits { user } { amount: u0 })
-  (ok "Released")
+  (begin
+    (asserts! (is-eq tx-sender contract-owner) (err u100)) ;; only owner can release
+    (map-set deposits { user } { amount: u0 })
+    (ok "Released")
+  )
 )
 
 (define-read-only (get-deposit (user principal))
   (default-to u0 (get amount (map-get? deposits { user })))
 )
+
 ;; Extra helper functions to increase Clarity lines
 
 (define-public (dummy-func-1) (ok u0))
